@@ -54,4 +54,41 @@ userPositionController.create = asyncHandler(async (req, res) => {
     logger({ req, status: loggerStatusConstant.SUCCESS, message: null, statusCode: 201 })
 })
 
+// @desc    create user position for another user
+// @route   POST /users/:userId/positions
+// @access  Private, Admin
+userPositionController.createByAdmin = asyncHandler(async (req, res) => {
+    req.event = eventConstant.userPosition.createUserPositionByAdmin.event
+    const { userId } = req.params
+    const { organizationId, type } = req.body
+    const requesterPositionType = req.auth.data.position?.type
+    const data = await userPositionService.createByAdmin(userId, organizationId, type, requesterPositionType)
+    res.status(201).json(data)
+    logger({ req, status: loggerStatusConstant.SUCCESS, message: null, statusCode: 201 })
+})
+
+// @desc    add a generus position to the logged in teacher
+// @route   POST /users/me/generus-position
+// @access  Private
+userPositionController.createMyGenerus = asyncHandler(async (req, res) => {
+    req.event = eventConstant.userPosition.createMyGenerusPosition.event
+    const userId = req.auth.data.id
+    const data = await userPositionService.createMyGenerus(userId)
+    res.status(201).json(data)
+    logger({ req, status: loggerStatusConstant.SUCCESS, message: null, statusCode: 201 })
+})
+
+// @desc    delete user position for another user
+// @route   DELETE /users/:userId/positions?organizationId=&type=
+// @access  Private, Admin
+userPositionController.deleteByAdmin = asyncHandler(async (req, res) => {
+    req.event = eventConstant.userPosition.deleteUserPositionByAdmin.event
+    const { userId } = req.params
+    const { organizationId, type } = req.query
+    const requesterPositionType = req.auth.data.position?.type
+    const data = await userPositionService.deleteByAdmin(userId, organizationId, type, requesterPositionType)
+    res.json(data)
+    logger({ req, status: loggerStatusConstant.SUCCESS })
+})
+
 module.exports = userPositionController

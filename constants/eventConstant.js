@@ -226,6 +226,46 @@ const eventConstant = {
 				}
 			},
 		},
+		createUserPositionByAdmin: {
+			event: 'create-user-position-by-admin',
+			message: {
+				success: 'berhasil',
+				failed: {
+					notFound: 'user tidak ditemukan.',
+					alreadyExists: 'user dengan posisi tersebut sudah ada.',
+					notFoundPosition: 'posisi tidak ditemukan.',
+					invalidType: 'tipe posisi tidak valid.',
+					forbiddenType: 'tidak berwenang menambahkan tipe posisi tersebut.',
+				}
+			},
+		},
+		createMyGenerusPosition: {
+			event: 'create-my-generus-position',
+			message: {
+				success: 'berhasil',
+				failed: {
+					notFound: 'user tidak ditemukan.',
+					notTeacher: 'user bukan pengajar.',
+					notFoundPosition: 'posisi generus tidak ditemukan pada kelompok tersebut.',
+					alreadyExists: 'user sudah memiliki posisi generus.',
+					noBirthdate: 'tanggal lahir belum diisi, kelas tidak dapat ditentukan.',
+				}
+			},
+		},
+		deleteUserPositionByAdmin: {
+			event: 'delete-user-position-by-admin',
+			message: {
+				success: 'berhasil',
+				failed: {
+					notFound: 'user tidak ditemukan.',
+					notFoundPosition: 'posisi tidak ditemukan.',
+					notAssigned: 'user tidak memiliki posisi tersebut.',
+					lastPosition: 'posisi tersebut satu-satunya posisi user. Hapus user bila ingin menghapusnya.',
+					invalidType: 'tipe posisi tidak valid.',
+					forbiddenType: 'tidak berwenang menghapus tipe posisi tersebut.',
+				}
+			},
+		},
 	},
 	attendance: {
 		create: {
@@ -356,6 +396,15 @@ const eventConstant = {
 		},
 		toplist: {
 			event: 'event-list-top',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid',
+				},
+			},
+		},
+		lastByName: {
+			event: 'event-last-by-name',
 			message: {
 				success: 'berhasil.',
 				failed: {
@@ -647,6 +696,88 @@ const eventConstant = {
 				success: 'berhasil.',
 				failed: {
 					notFound: 'data tidak ditemukan',
+				},
+			},
+		},
+	},
+	materialTarget: {
+		create: {
+			event: 'create-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid.',
+					invalidMaterialIds: 'Material IDs must be an array and not empty.',
+					invalidGrades: 'Grades must be an array and not empty.',
+					invalidMonth: 'Invalid month.',
+					invalidYear: 'Invalid year.',
+				},
+			},
+		},
+		list: {
+			event: 'list-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid.',
+				},
+			},
+		},
+		listIds: {
+			event: 'list-material-target-ids',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid.',
+				},
+			},
+		},
+		group: {
+			event: 'group-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid.',
+				},
+			},
+		},
+		update: {
+			event: 'update-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					notFound: 'data tidak ditemukan.',
+					invalidData: 'data tidak valid.',
+				},
+			},
+		},
+		delete: {
+			event: 'delete-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					notFound: 'data tidak ditemukan.',
+					invalidData: 'data parameter tidak valid.',
+				},
+			},
+		},
+		summary: {
+			event: 'summary-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					structureNotFound: 'struktur materi tidak ditemukan.',
+					subcategoryNotFound: 'subcategory harus diisi.',
+				},
+			},
+		},
+		duplicate: {
+			event: 'duplicate-material-target',
+			message: {
+				success: 'berhasil.',
+				failed: {
+					invalidData: 'data tidak valid.',
+					notFound: 'tidak ada target yang ditemukan untuk diduplikasi.',
 				},
 			},
 		},

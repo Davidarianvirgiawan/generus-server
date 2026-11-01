@@ -12,14 +12,13 @@ userRepository.delete = async (id, deletedBy) => {
         UPDATE "users"
         SET "isActive" = $2, "deletedAt" = $3, "deletedBy" = $4
         WHERE "id" = $1`, {
-            bind: [id, false, now, deletedBy],
-            type: QueryTypes.UPDATE,
-        }
-    )
+        bind: [id, false, now, deletedBy],
+        type: QueryTypes.UPDATE,
+    })
 }
 
 userRepository.findById = async (id) => {
-    const query = selectQuery() + baseJoinQuery() + filterById() + groupByQuery()
+    const query = selectQuery() + teacherDetailQuery() + baseJoinQuery() + filterById() + groupByQuery()
     const [data] = await db.query(query, {
         bind: [id],
         type: QueryTypes.SELECT,
@@ -51,11 +50,10 @@ const updateUserProfile = async (trx, data) => {
         UPDATE users
         SET "name" = $2, "sex" = $3, "isMuballigh" = $4, "birthdate" = $5, "password" = $6, "updatedAt" = $7, "phone" = $8, "email" = $9,"updatedBy" = $1
         WHERE "id" = $1`, {
-            bind: [id, name, sex, isMuballigh, birthdate, password, now, phone, email],
-            type: QueryTypes.UPDATE,
-            transaction: trx,
-        }
-    )
+        bind: [id, name, sex, isMuballigh, birthdate, password, now, phone, email],
+        type: QueryTypes.UPDATE,
+        transaction: trx,
+    })
 }
 
 const updateUserPositions = async (trx, data) => {
@@ -65,24 +63,20 @@ const updateUserPositions = async (trx, data) => {
         UPDATE "usersPositions"
         SET "positionId" = $3, "createdAt" = $4
         WHERE "userId" = $1 AND "positionId" = $2`, {
-            bind: [id, currentPositionId, newPositionId, now],
-            type: QueryTypes.UPDATE,
-            transaction: trx,
-        }
-    )
+        bind: [id, currentPositionId, newPositionId, now],
+        type: QueryTypes.UPDATE,
+        transaction: trx,
+    })
 }
-
-
 
 userRepository.findUserStudent = async (userId) => {
     return db.query(`
         SELECT "userId"
         FROM "students" 
         WHERE "userId" = $1`, {
-            bind: [userId],
-            type: QueryTypes.SELECT,
-        }
-    )
+        bind: [userId],
+        type: QueryTypes.SELECT,
+    })
 }
 
 userRepository.updateUserStudent = async (data) => {
@@ -92,23 +86,30 @@ userRepository.updateUserStudent = async (data) => {
         UPDATE students
         SET "grade" = $2, "updatedAt" = $3, "updatedBy" = $1
         WHERE "userId" = $1`, {
-            bind: [userId, grade, now],
-            type: QueryTypes.UPDATE
-        }
-    )
+        bind: [userId, grade, now],
+        type: QueryTypes.UPDATE
+    })
 }
 
-userRepository.updateUserStudentByAdmin = async (data) => {
-    const { userId, grade, updatedBy } = data
+userRepository.updateUserByAdmin = async (data) => {
+    const { newPositionId } = data
+    await db.transaction(async (t) => {
+        await updateUserStudentByAdmin(t, data)
+        if (newPositionId) await updateUserPositions(t, data)
+    })
+}
+
+const updateUserStudentByAdmin = async (trx, data) => {
+    const { id, grade, updatedBy } = data
     const now = Date.now()
     await db.query(`
         UPDATE students
         SET "grade" = :grade, "updatedAt" = :updatedAt, "updatedBy" = :updatedBy
-        WHERE "userId" = :userId`, {
-            replacements: { userId, grade, updatedAt: now, updatedBy },
-            type: QueryTypes.UPDATE
-        }
-    )
+        WHERE "userId" = :id`, {
+        replacements: { id, grade, updatedAt: now, updatedBy },
+        type: QueryTypes.UPDATE,
+        transaction: trx,
+    })
 }
 
 userRepository.findUserTeacher = async (userId) => {
@@ -116,10 +117,9 @@ userRepository.findUserTeacher = async (userId) => {
         SELECT "userId"
         FROM "teachers" 
         WHERE "userId" = $1`, {
-            bind: [userId],
-            type: QueryTypes.SELECT,
-        }
-    )
+        bind: [userId],
+        type: QueryTypes.SELECT,
+    })
 }
 
 userRepository.updateUserTeacher = async (data) => {
@@ -144,10 +144,9 @@ userRepository.updateUserTeacher = async (data) => {
             "updatedAt" = :now,
             "updatedBy" = :userId
         WHERE "userId" = :userId`, {
-            replacements: data,
-            type: QueryTypes.UPDATE
-        }
-    )
+        replacements: data,
+        type: QueryTypes.UPDATE
+    })
 }
 
 userRepository.findUserPassword = async (id) => {
@@ -161,14 +160,13 @@ userRepository.findUserPassword = async (id) => {
 userRepository.findPositions = async (positionsIds) => {
     return db.query(
         'SELECT id, type FROM positions WHERE id = ANY($1::int[])', {
-            bind: [positionsIds],
-            type: QueryTypes.SELECT,
-        }
-    )
+        bind: [positionsIds],
+        type: QueryTypes.SELECT,
+    })
 }
 
 userRepository.findAll = async (filters, search, page, pageSize) => {
-    const query = selectQuery() + baseJoinQuery() + filtersQuery(filters) + searchQuery(search) + groupByQuery() + orderByQuery() + paginateQuery(page, pageSize)
+    const query = selectQuery() + allPositionsQuery() + baseJoinQuery() + filtersQuery(filters) + searchQuery(search) + groupByQuery() + orderByQuery() + paginateQuery(page, pageSize)
     const queryTotal = totalQuery() + baseJoinQuery() + filtersQuery(filters) + searchQuery(search)
     const [data] = await db.query(query)
     const [total] = await db.query(queryTotal)
@@ -281,14 +279,53 @@ const selectQuery = () => {
     `
 }
 
+// Kolom kemuballighan tambahan, hanya dipakai halaman detail supaya payload
+// daftar user tidak ikut membengkak.
+const teacherDetailQuery = () => {
+    return `
+        ,teachers."muballighStatus",
+        teachers."maritalStatus",
+        teachers."children",
+        teachers."assignmentStartDate",
+        teachers."assignmentFinishDate",
+        teachers."scopes",
+        teachers."job",
+        teachers."hasBpjs"
+    `
+}
+
 const totalQuery = () => {
     return `
         SELECT count(DISTINCT users.id)
     `
 }
 
+// All positions of the user, unaffected by the position filters applied to the
+// outer query, so callers can tell which roles a user holds beyond the filtered one.
+const allPositionsQuery = () => {
+    return `
+        ,(
+            SELECT JSON_AGG(
+                JSON_BUILD_OBJECT(
+                    'isMain', up."isMain",
+                    'positionDeletedAt', up."deletedAt",
+                    'type', p.type,
+                    'positionId', p.id,
+                    'positionName', p.name,
+                    'organizationId', o.id,
+                    'organizationName', o.name
+                )
+            )
+            FROM "usersPositions" up
+                LEFT JOIN positions p on p.id = up."positionId"
+                LEFT JOIN organizations o on o.id = p."organizationId"
+            WHERE up."userId" = users.id
+        ) as "allPositions"
+    `
+}
+
 const baseJoinQuery = () => {
-    return`
+    return `
         FROM users
         LEFT JOIN teachers on users.id = teachers."userId"
         LEFT JOIN students on users.id = students."userId"

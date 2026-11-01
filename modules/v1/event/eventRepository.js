@@ -32,11 +32,38 @@ eventRepository.findById = async (session, id) => {
     return data
 }
 
+// find the latest event with the exact same name in the session user organization
+eventRepository.findLastByName = async (session, name) => {
+    const [data] = await db.query(`
+        SELECT
+            events.id,
+            events.name,
+            events.passcode,
+            events.location,
+            events.description,
+            events.grades,
+            events."startDate",
+            events."endDate",
+            events."mustUpdateMaterialFirst"
+        FROM events
+        WHERE events."deletedAt" IS NULL
+            AND events."organizationId" = :organizationId
+            AND LOWER(TRIM(events.name)) = LOWER(TRIM(:name))
+        ORDER BY events.id DESC
+        LIMIT 1;
+    `, {
+        replacements: { organizationId: session.position.orgId, name },
+        type: QueryTypes.SELECT,
+    })
+    return data
+}
+
 eventRepository.findAll = async (session, filters, search, page, pageSize, order) => {
     const query = selectQuery(session) + filtersQuery(session, filters) + searchQuery(search) + orderBy(order) + paginateQuery(page, pageSize)
     const queryTotal = totalQuery() + filtersQuery(session, filters) + searchQuery(search)
-    const [data] = await db.query(query)
-    const [total] = await db.query(queryTotal)
+    const replacements = { search: `%${search}%` }
+    const [data] = await db.query(query, { replacements })
+    const [total] = await db.query(queryTotal, { replacements })
     return { data, total }
 }
 
@@ -56,7 +83,8 @@ const selectQuery = (session) => {
             ${session?.position.type === positionTypesConstant.GENERUS ? '' : '"passcode",'}
             events."createdBy",
             events."groupId",
-            events."isGroupHead"
+            events."isGroupHead",
+            events."mustUpdateMaterialFirst"
         FROM events
         LEFT JOIN organizations on organizations.id = "events"."organizationId"
     `
@@ -72,7 +100,7 @@ const totalQuery = () => {
 
 const searchQuery = (search) => {
     if (search) return `
-        AND (events.name ILIKE '%${search}%' OR organizations.name ILIKE '%${search}%')
+        AND (events.name ILIKE :search OR organizations.name ILIKE :search)
     `
     return ''
 }
@@ -115,7 +143,8 @@ const filterByDefault = () => {
 }
 
 const filterByOrganizationIds = (filters) => {
-    let { organizationIds } = filters
+    // comes straight from the query string, keep only real ids
+    const organizationIds = filters.organizationIds?.map(Number).filter(Number.isInteger)
     if (organizationIds?.length) return `
         AND events."organizationId" IN (${organizationIds})
     `
@@ -207,14 +236,14 @@ eventRepository.deleteEvent = async (createdBy, eventId) => {
 }
 
 const createEvent = async (trx, data) => {
-    const { session, roomId, name, passcode, startDate, endDate, location, description, grades } = data
+    const { session, roomId, name, passcode, startDate, endDate, location, description, grades, mustUpdateMaterialFirst } = data
     const now = Date.now()
 
     return db.query(`
-        INSERT INTO "events" ("organizationId", "roomId", "name", "passcode", "startDate", "endDate", "location", "description", "createdBy", "updatedBy", "createdAt", "updatedAt", "organizationName", "grades")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, $10, $11, $12)
+        INSERT INTO "events" ("organizationId", "roomId", "name", "passcode", "startDate", "endDate", "location", "description", "createdBy", "updatedBy", "createdAt", "updatedAt", "organizationName", "grades", "mustUpdateMaterialFirst")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, $10, $11, $12, $13)
         RETURNING id`, {
-        bind: [session.position.orgId, roomId, name, passcode, startDate, endDate, location, description, session.id, now, session.position.orgName, grades],
+        bind: [session.position.orgId, roomId, name, passcode, startDate, endDate, location, description, session.id, now, session.position.orgName, grades, mustUpdateMaterialFirst ?? false],
         type: QueryTypes.INSERT,
         transaction: trx,
     }

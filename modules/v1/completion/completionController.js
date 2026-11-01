@@ -102,8 +102,8 @@ completionController.deleteByAdmin = asyncHandler(async (req, res) => {
 completionController.sumUser = asyncHandler(async (req, res) => {
     req.event = eventConstant.completion.sum.event
     const { structure, userId } = req.params
-    const { grade, subject, category, subcategory } = req.query
-    const filters = { grade, subject, category, subcategory }
+    const { grade, subject, category, subcategory, targetMaterialMonth, targetMaterialYear, targetGrade } = req.query
+    const filters = { grade, subject, category, subcategory, targetMaterialMonth, targetMaterialYear, targetGrade }
     const data = await completionService.sumCompletion(structure, userId, filters)
     res.json({ data })
     logger({ req, status: loggerStatusConstant.SUCCESS })
@@ -115,7 +115,7 @@ completionController.sumUser = asyncHandler(async (req, res) => {
 completionController.sumUsers = asyncHandler(async (req, res) => {
     req.event = eventConstant.completion.sum.event
     const { structure } = req.params
-    const { grade, subject, category, subcategory, usersGrade, organizationId, ancestorId } = req.query
+    const { grade, subject, category, subcategory, usersGrade, organizationId, ancestorId, targetMaterialMonth, targetMaterialYear, targetGrade } = req.query
     const ancestorIdScope = calculateAncestorIdScope(req.auth.data, ancestorId)
     const filters = {
         grade,
@@ -124,7 +124,10 @@ completionController.sumUsers = asyncHandler(async (req, res) => {
         subcategory,
         usersGrade,
         organizationId,
-        ancestorId: ancestorIdScope
+        ancestorId: ancestorIdScope,
+        targetMaterialMonth,
+        targetMaterialYear,
+        targetGrade
     }
     const data = await completionService.sumCompletions(structure, filters)
     res.json({ data })

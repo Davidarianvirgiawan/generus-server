@@ -7,13 +7,15 @@ const presenceController = require(`../modules/${config.APP_VERSION}/presence/pr
 const router = express.Router()
 // events
 router.route('/')
-    .post(protect, admin, eventController.create)
+    .post(protect, teacher, eventController.create)
     .get(protect, eventController.list)
 router.route('/top')
     .get(protect, eventController.topList)
+router.route('/last')
+    .get(protect, teacher, eventController.lastByName)
 router.route('/:id')
     .get(protect, eventController.detail)
-    .delete(protect, admin, eventController.delete)
+    .delete(protect, teacher, eventController.delete)
 // presences
 router.route('/:eventId/presences/download')
     .get(protect, presenceController.download)

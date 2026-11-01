@@ -54,10 +54,19 @@ completionService.sumCompletions = async (structure, filters) => {
     return calculateSumCompletions(completionsCount, materialsCount, structure, materialsMultiplier)
 }
 
+// materials are only listable one by one when the result set is already narrowed down,
+// either by subcategory or by a specific monthly target
+const validateMaterialScope = (filters) => {
+    const event = eventConstant.completion.sum
+    const hasMonthlyTarget = Boolean(filters?.targetMaterialMonth && filters?.targetMaterialYear)
+    if (!filters?.subcategory && !hasMonthlyTarget) {
+        throwError(`${event.message.failed.subcategoryNotFound}`, 404)
+    }
+}
+
 const getCompletionCount = async (structure, userId, filters) => {
     if (structure === 'material') {
-        const event = eventConstant.completion.sum
-        if (!filters?.subcategory) throwError(`${event.message.failed.subcategoryNotFound}`, 404)
+        validateMaterialScope(filters)
         return completionRepository.countUserCompletionsWithId(userId, filters)
     } else {
         return completionRepository.countUserCompletions(structure, userId, filters)
@@ -66,8 +75,7 @@ const getCompletionCount = async (structure, userId, filters) => {
 
 const getMaterialCount = async (structure, filters) => {
     if (structure === 'material') {
-        const event = eventConstant.completion.sum
-        if (!filters?.subcategory) throwError(`${event.message.failed.subcategoryNotFound}`, 404)
+        validateMaterialScope(filters)
         return completionRepository.countUserCompletionsMaterialsWithId(filters)
     } else {
         return completionRepository.countUserCompletionsMaterials(structure, filters)
@@ -90,7 +98,11 @@ const getUsersCount = async (positionTypes, filters) => {
 const calculateSumCompletion = (completionsCount, materialsCount, structure, materialsMultiplier) => {
     const findCompletionIndex = structure === 'material' ? 'id' : structure
     return materialsCount.map(material => {
-        const completion = completionsCount.find(c => c[findCompletionIndex] === material[findCompletionIndex])
+        const completion = completionsCount.find(c => {
+            const structureMatch = c[findCompletionIndex] === material[findCompletionIndex]
+            const subjectMatch = material.subject ? c.subject === material.subject : true
+            return structureMatch && subjectMatch
+        })
         const completionCount = completion ? parseInt(completion.count, 10) : 0
         const materialCount = parseInt(material.count, 10)
         const percentage = materialsMultiplier
@@ -101,6 +113,9 @@ const calculateSumCompletion = (completionsCount, materialsCount, structure, mat
         sumData[structure] = material[structure]
         sumData.materialId = material.id
         sumData.grade = material.grade
+        sumData.subject = material.subject
+        sumData.category = material.category
+        sumData.subcategory = material.subcategory
         sumData.createdAt = completion?.createdAt
         return sumData
     })
@@ -108,7 +123,11 @@ const calculateSumCompletion = (completionsCount, materialsCount, structure, mat
 
 const calculateSumCompletions = (completionsCount, materialsCount, structure, materialsMultiplier) => {
     return materialsCount.map(material => {
-        const completion = completionsCount.find(c => c[structure] === material[structure])
+        const completion = completionsCount.find(c => {
+            const structureMatch = c[structure] === material[structure]
+            const subjectMatch = material.subject ? c.subject === material.subject : true
+            return structureMatch && subjectMatch
+        })
         const completionCount = completion ? parseInt(completion.count, 10) : 0
         const materialCount = parseInt(material.count, 10)
         const percentage = materialsMultiplier
@@ -119,6 +138,7 @@ const calculateSumCompletions = (completionsCount, materialsCount, structure, ma
         sumData[structure] = material[structure]
         sumData.materialId = material.id
         sumData.grade = material.grade
+        sumData.subject = material.subject
         return sumData
     })
 }

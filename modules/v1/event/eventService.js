@@ -6,7 +6,7 @@ const eventRepository = require('./eventRepository')
 const eventService = {}
 
 eventService.createEvent = async ({ session, payload }) => {
-    const { name, passcode, startDate, endDate, location, description, grades, defaultPresenceStatus } = payload
+    const { name, passcode, startDate, endDate, location, description, grades, defaultPresenceStatus, mustUpdateMaterialFirst } = payload
     const data = {
         session,
         roomId: generateRoomId(),
@@ -18,6 +18,7 @@ eventService.createEvent = async ({ session, payload }) => {
         description,
         grades,
         defaultPresenceStatus,
+        mustUpdateMaterialFirst: Boolean(mustUpdateMaterialFirst),
     }
     
     const eventId = await eventRepository.insertEvent(data)
@@ -36,6 +37,12 @@ eventService.deleteEvent = async (session, id) => {
 eventService.getEvents = async (session, filters, search, page, pageSize, order) => {
     const { data, total } = await eventRepository.findAll(session, filters, search, page, pageSize, order)
     return { data, total }
+}
+
+eventService.getLastEventByName = async (session, name) => {
+    if (!name?.trim()) return null
+    const data = await eventRepository.findLastByName(session, name.trim())
+    return data ?? null
 }
 
 eventService.getTopEvents = async (session) => {

@@ -8,7 +8,7 @@ module.exports = {
     for (let key in positionTypes) {
       if ([positionTypes.ADMIN, positionTypes.PENGURUS].includes(key)) {
         data.push({
-          name: `${positionTypes[key]} PPG BANDUNG SELATAN`,
+          name: `${positionTypes[key]} PPG Belopa`,
           type: key,
           organizationId: 1,
           createdAt: now,

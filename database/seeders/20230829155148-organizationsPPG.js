@@ -5,7 +5,7 @@ module.exports = {
     const now = Date.now()
     const data = [{
       id: 1,
-      name: 'PPG BANDUNG SELATAN',
+      name: 'PPG Belopa',
       level: organizationLevelsConstant.ppg,
       createdAt: now,
       updatedAt: now,

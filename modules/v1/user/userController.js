@@ -30,7 +30,8 @@ userController.list = asyncHandler(async (req, res) => {
     const { search } = req.query
     const page = req.query.page || 1
     const pageSize = req.query.pageSize || 20
-    const ancestorIdScope = calculateAncestorIdScope(req.auth.data, ancestorId)   
+    const ancestorIdScope = calculateAncestorIdScope(req.auth.data, ancestorId)
+    console.log(ancestorIdScope);   
     const filters = { 
         userId: req.auth.data.id,
         positionId: req.auth.data.position.positionId,
@@ -42,6 +43,7 @@ userController.list = asyncHandler(async (req, res) => {
         grade,
         hasExistPosition,
     }
+    console.log(filters)
 
     const { data, total } = await userService.getUsers(filters, search, page, pageSize)
     const metadata = paginate({ page, pageSize, count: data.length, totalCount: total[0].count })

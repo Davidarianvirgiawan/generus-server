@@ -4,6 +4,7 @@ const config = require('../config.js')
 const positionTypesConstant = require('../constants/positionTypesConstant.js')
 const { throwError } = require('../utils/errorUtils.js')
 const eventConstant = require('../constants/eventConstant.js')
+const organizationLevelsConstant = require('../constants/organizationLevelsConstant.js')
 const accessTypesConstant = require('../constants/accessTypesConstant.js')
 const authRepository = require(`../modules/${config.APP_VERSION}/auth/authRepository`)
 
@@ -42,6 +43,15 @@ authMiddleware.admin = asyncHandler(async (req, res, next) => {
     next()
 })
 
+authMiddleware.mainAdmin = asyncHandler(async (req, res, next) => {
+    const { position, access } = req.auth.data
+    const isMainAdmin = position?.type === positionTypesConstant.ADMIN
+        && position?.orgLevel === organizationLevelsConstant.ppg
+    const isViewer = access?.type === accessTypesConstant.VIEWER
+    if (isMainAdmin && !isViewer) return next()
+    throwError(event.message.failed.unauthenticated, 401)
+})
+
 authMiddleware.teacher = asyncHandler(async (req, res, next) => {
     const { position, access } = req.auth.data
     
@@ -51,6 +61,18 @@ authMiddleware.teacher = asyncHandler(async (req, res, next) => {
 
     const isNotViewer = access?.type !== accessTypesConstant.VIEWER
     if (isAdminOrPengajar && isNotViewer) return next()
+    throwError(event.message.failed.unauthenticated, 401)
+})
+
+authMiddleware.student = asyncHandler(async (req, res, next) => {
+    const { position } = req.auth.data
+    if (position?.type === positionTypesConstant.GENERUS) return next()
+    throwError(event.message.failed.unauthenticated, 401)
+})
+
+authMiddleware.parent = asyncHandler(async (req, res, next) => {
+    const { position } = req.auth.data
+    if (position?.type === positionTypesConstant.ORANGTUA) return next()
     throwError(event.message.failed.unauthenticated, 401)
 })
 

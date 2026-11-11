@@ -16,6 +16,9 @@ const organizationRoutes = require('./routes/organizationRoutes')
 const directoryRoutes = require('./routes/directoryRoutes')
 const materialTargetRoutes = require('./routes/materialTargetRoutes')
 
+const homeActivityRoutes = require('./routes/homeActivityRoutes')
+const musdaAttendanceRoutes = require('./routes/musdaAttendanceRoutes')
+
 // Connecting db
 db.authenticate()
   .then(() => console.log('Database connected 🚀'))
@@ -46,6 +49,8 @@ app.use(`/${version}/positions`, positionRoutes)
 app.use(`/${version}/organizations`, organizationRoutes)
 app.use(`/${version}/directories`, directoryRoutes)
 app.use(`/${version}/material-targets`, materialTargetRoutes)
+app.use(`/${version}/home-activities`, homeActivityRoutes)
+app.use(`/${version}/musda-attendances`, musdaAttendanceRoutes)
 app.use('/api', homeRoutes)
 
 // Error handler

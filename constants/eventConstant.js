@@ -700,6 +700,52 @@ const eventConstant = {
 			},
 		},
 	},
+	homeActivity: {
+		list: { event: 'list-home-activity', message: { failed: { invalidInput: 'studentId tidak valid.' } } },
+		create: {
+			event: 'create-home-activity',
+			message: {
+				failed: {
+					invalidType: 'Tipe hanya boleh CORE/ADDITIONAL.',
+					invalidData: 'groupName wajib diisi.',
+					invalidName: 'name wajib diisi untuk tipe CORE.',
+				},
+			},
+		},
+		update: {
+			event: 'update-home-activity',
+			message: { failed: { notFound: 'data tidak ditemukan' } },
+		},
+		delete: { event: 'delete-home-activity' },
+		logs: {
+			event: 'list-home-activity-logs',
+			message: { failed: { invalidInput: 'studentId dan date (YYYY-MM-DD) wajib valid.' } },
+		},
+		check: {
+			event: 'check-home-activity',
+			message: {
+				failed: {
+					invalidInput: 'studentId, activityId, date (YYYY-MM-DD) dan checked wajib valid.',
+					notFound: 'Kegiatan tidak ditemukan.',
+				},
+			},
+		},
+		parents: {
+			event: 'list-home-activity-parents',
+			message: {
+				failed: {
+					invalidInput: 'data tidak valid.',
+					notFound: 'Data tidak ditemukan.',
+					exists: 'Permintaan sudah ada.',
+					forbidden: 'Anak belum terhubung dengan akun ini.',
+				},
+			},
+		},
+		report: {
+			event: 'report-home-activity',
+			message: { failed: { invalidInput: 'month (YYYY-MM) dan studentId wajib valid.' } },
+		},
+	},
 	materialTarget: {
 		create: {
 			event: 'create-material-target',
@@ -781,6 +827,19 @@ const eventConstant = {
 				},
 			},
 		},
+	},
+	musdaAttendance: {
+		list: { event: 'list-musda-attendance', message: { failed: { invalidInput: 'month wajib berformat YYYY-MM.' } } },
+		create: {
+			event: 'create-musda-attendance',
+			message: { failed: { invalidInput: 'month (YYYY-MM), nama dan dapukan wajib diisi.' } },
+		},
+		update: {
+			event: 'update-musda-attendance',
+			message: { failed: { invalidInput: 'nama dan dapukan wajib diisi.', notFound: 'data tidak ditemukan' } },
+		},
+		delete: { event: 'delete-musda-attendance' },
+		download: { event: 'download-musda-attendance' },
 	},
 }
 
